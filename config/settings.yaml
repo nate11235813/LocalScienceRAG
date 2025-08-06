@@ -30,3 +30,23 @@ ui:
     You are an expert biomechanics assistant.
     Answer concisely and cite supporting chunks like [1], [2].
     Do not reveal your internal analysis or reasoning steps.
+
+tts:
+  # Device to use for TTS model (cuda, mps, or cpu)
+  device: "mps"
+  
+  # Emotion control parameters
+  exaggeration: 0.5  # Emotion intensity (0.0-1.0)
+  cfg_weight: 0.5    # Classifier-free guidance weight
+  
+  # Optional: Path to audio file for voice cloning
+  # audio_prompt_path: "data/voice_samples/sample.wav"
+  
+  # Output directory for generated audio files
+  output_dir: "data/tts_output"
+  
+  # Enable TTS in chat mode
+  enabled: false
+  
+  # Auto-play generated audio (requires system audio player)
+  auto_play: false
