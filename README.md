@@ -2,7 +2,7 @@
 
 ## 📚 Overview
 
-This is a refactored version of the RAG (Retrieval-Augmented Generation) application for scientific PDF processing. The new architecture provides better separation of concerns, modularity, testability, and maintainability.
+This is a RAG (Retrieval-Augmented Generation) application for scientific PDF processing. The architecture provides separation of concerns, modularity, testability, and maintainability.
 
 ## 🏗️ Architecture
 
