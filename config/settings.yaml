@@ -1,39 +1,55 @@
+# Configuration file for RAG application
 model:
-  id: microsoft/phi-2
-  dtype: float32
-  device: cpu
-  max_new_tokens: 200
-  temperature: 0.3
+  id: "unsloth/gpt-oss-20b-BF16"
+  dtype: "bfloat16"
+  device: "mps"
+  max_new_tokens: 512
+  temperature: 0.7
   do_sample: true
-  max_seq_length: 2048
-  load_in_4bit: false
-  load_in_8bit: false
+  max_seq_length: 2048  # Maximum sequence length for the model
+  load_in_4bit: false  # Use 4-bit quantization to reduce memory (optional)
+  load_in_8bit: false  # Use 8-bit quantization to reduce memory (optional)
+
 embeddings:
-  model_name: sentence-transformers/all-MiniLM-L6-v2
-  device: mps
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  device: "mps"  # Use "cpu" to save GPU memory
+
 vector_store:
-  index_dir: data/faiss_store
+  index_dir: "data/faiss_store"
   chunk_size: 1000
   chunk_overlap: 150
   top_k: 4
+
 paths:
-  pdf_dir: data/science_pdfs
+  pdf_dir: "data/science_pdfs"
+  
 logging:
-  level: INFO
-  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
 ui:
   show_spinner: true
-  system_prompt: 'You are an expert biomechanics assistant.
-
+  system_prompt: |
+    You are an expert biomechanics assistant.
     Answer concisely and cite supporting chunks like [1], [2].
-
     Do not reveal your internal analysis or reasoning steps.
 
-    '
 tts:
-  device: mps
-  exaggeration: 0.5
-  cfg_weight: 0.5
-  output_dir: data/tts_output
+  # Device to use for TTS model (cuda, mps, or cpu)
+  device: "mps"
+  
+  # Emotion control parameters
+  exaggeration: 0.5  # Emotion intensity (0.0-1.0)
+  cfg_weight: 0.5    # Classifier-free guidance weight
+  
+  # Optional: Path to audio file for voice cloning
+  # audio_prompt_path: "data/voice_samples/sample.wav"
+  
+  # Output directory for generated audio files
+  output_dir: "data/tts_output"
+  
+  # Enable TTS in chat mode
   enabled: false
+  
+  # Auto-play generated audio (requires system audio player)
   auto_play: false
