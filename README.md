@@ -2,7 +2,7 @@
 
 ## 📚 Overview
 
-This is a RAG (Retrieval-Augmented Generation) application for scientific PDF processing. The architecture provides separation of concerns, modularity, testability, and maintainability.
+This is a refactored version of the RAG (Retrieval-Augmented Generation) application for scientific PDF processing. The new architecture provides better separation of concerns, modularity, testability, and maintainability.
 
 ## 🏗️ Architecture
 
@@ -20,8 +20,7 @@ This is a RAG (Retrieval-Augmented Generation) application for scientific PDF pr
 ├── services/                 # Service layer
 │   ├── __init__.py
 │   ├── document_indexer.py   # PDF indexing service
-│   ├── rag_service.py        # RAG question-answering service
-│   └── tts_service.py        # Text-to-Speech service (Chatterbox TTS)
+│   └── rag_service.py        # RAG question-answering service
 ├── utils/                    # Utilities
 │   ├── __init__.py
 │   ├── config_loader.py      # Configuration loading
@@ -68,12 +67,6 @@ python main.py chat
 # Chat with context display
 python main.py chat --show-context
 
-# Chat with text-to-speech output
-python main.py chat --tts
-
-# Chat with TTS and auto-play audio
-python main.py chat --tts --auto-play
-
 # Test model generation
 python main.py test --prompt "Your question here"
 
@@ -83,32 +76,6 @@ python main.py --verbose chat
 # Save logs to file
 python main.py --log-file logs/app.log chat
 ```
-
-### Text-to-Speech (TTS) Features
-
-The application now includes **Chatterbox TTS** integration for converting RAG responses to speech:
-
-```bash
-# Run TTS examples
-python example_tts.py --example basic       # Basic TTS demo
-python example_tts.py --example emotion     # Emotion control demo
-python example_tts.py --example scientific  # Scientific text examples
-python example_tts.py --example batch       # Batch processing
-python example_tts.py --example all         # Run all examples
-
-# Voice cloning (requires a voice sample)
-python example_tts.py --example voice --voice-sample path/to/voice.wav
-
-# Test TTS functionality
-python test_tts.py
-```
-
-**Key TTS Features:**
-- 🎭 **Emotion Control**: Adjust speech emotion intensity (excited, calm, dramatic, etc.)
-- 🎤 **Voice Cloning**: Use any voice sample to synthesize speech
-- ⚡ **Fast Inference**: Sub-200ms latency for real-time applications
-- 🛡️ **Watermarking**: Built-in PerTh neural watermarking for responsible AI
-- 🔊 **Auto-playback**: Automatic audio playback on macOS, Linux, and Windows
 
 ## 🔄 Migration from Original Code
 
@@ -218,43 +185,6 @@ result = rag_service.answer_question(
 )
 
 print(result["answer"])
-```
-
-### Using TTS as a Library
-
-```python
-from utils import load_config
-from services import TTSService, EmotionalTTSService
-
-# Load configuration
-config = load_config("config/settings.yaml")
-
-# Basic TTS
-tts = TTSService(config)
-tts.load_model()
-
-# Generate speech
-audio_path = tts.synthesize("Hello from the RAG system!")
-print(f"Audio saved to: {audio_path}")
-
-# With emotion control
-emotional_tts = EmotionalTTSService(config)
-emotional_tts.load_model()
-
-# Generate with emotion preset
-audio_path = emotional_tts.synthesize_with_emotion(
-    "This is an exciting discovery!",
-    emotion="excited"
-)
-
-# Voice cloning
-cloned_audio = tts.convert_voice(
-    "This uses your voice",
-    voice_sample_path="path/to/voice.wav"
-)
-
-# Cleanup
-tts.cleanup()
 ```
 
 ## 🔧 Customization

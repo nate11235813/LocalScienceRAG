@@ -6,35 +6,10 @@ import sys
 from pathlib import Path
 from utils import load_config, setup_logging
 from core import ModelManager, EmbeddingsManager, VectorStoreManager, DocumentRetriever
-from services import DocumentIndexer, RAGService, TTSService
+from services import DocumentIndexer, RAGService
 import logging
-import subprocess
-import platform
 
 logger = logging.getLogger(__name__)
-
-
-def play_audio(audio_path):
-    """Play audio file using system's default audio player."""
-    system = platform.system()
-    try:
-        if system == "Darwin":  # macOS
-            subprocess.run(["afplay", str(audio_path)], check=False)
-        elif system == "Linux":
-            # Try multiple players in order of preference
-            for player in ["aplay", "paplay", "ffplay"]:
-                try:
-                    subprocess.run([player, str(audio_path)], check=False)
-                    break
-                except FileNotFoundError:
-                    continue
-        elif system == "Windows":
-            # Windows Media Player
-            subprocess.run(["start", "", str(audio_path)], shell=True, check=False)
-        else:
-            logger.warning(f"Audio playback not supported on {system}")
-    except Exception as e:
-        logger.warning(f"Failed to play audio: {e}")
 
 
 def build_index_command(args, config):
@@ -66,17 +41,6 @@ def chat_command(args, config):
     import threading
     import itertools
     import time
-    
-    # Initialize TTS if enabled
-    tts_service = None
-    if args.tts or config.get("tts", {}).get("enabled", False):
-        try:
-            print("🔊 Initializing TTS service...")
-            tts_service = TTSService(config)
-            tts_service.load_model()
-        except Exception as e:
-            logger.warning(f"Failed to initialize TTS: {e}")
-            tts_service = None
     
     def spinner(stop_event):
         """Display spinner while processing."""
@@ -140,18 +104,6 @@ def chat_command(args, config):
                 # Display answer
                 print(f"🤖 {result['answer']}\n")
                 
-                # Generate TTS if enabled
-                if tts_service and (args.tts or config.get("tts", {}).get("enabled", False)):
-                    try:
-                        audio_path = tts_service.synthesize(result['answer'])
-                        print(f"🔊 Audio saved to: {audio_path}")
-                        
-                        # Auto-play if enabled
-                        if args.auto_play or config.get("tts", {}).get("auto_play", False):
-                            play_audio(audio_path)
-                    except Exception as e:
-                        logger.warning(f"TTS failed: {e}")
-                
                 # Optionally show context
                 if args.show_context:
                     print("📚 Retrieved context:")
@@ -165,8 +117,6 @@ def chat_command(args, config):
         # Cleanup
         print("\n👋 Goodbye!")
         model_manager.cleanup()
-        if tts_service:
-            tts_service.cleanup()
         
     except Exception as e:
         logger.error(f"Chat failed: {e}")
@@ -242,16 +192,6 @@ def main():
         "--show-context",
         action="store_true",
         help="Show retrieved context with answers"
-    )
-    chat_parser.add_argument(
-        "--tts",
-        action="store_true",
-        help="Enable text-to-speech for responses"
-    )
-    chat_parser.add_argument(
-        "--auto-play",
-        action="store_true",
-        help="Auto-play generated audio"
     )
     
     # Test command
