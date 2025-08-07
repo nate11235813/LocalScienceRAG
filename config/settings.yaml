@@ -6,9 +6,6 @@ model:
   max_new_tokens: 512
   temperature: 0.7
   do_sample: true
-  max_seq_length: 2048  # Maximum sequence length for the model
-  load_in_4bit: false  # Use 4-bit quantization to reduce memory (optional)
-  load_in_8bit: false  # Use 8-bit quantization to reduce memory (optional)
 
 embeddings:
   model_name: "sentence-transformers/all-MiniLM-L6-v2"
