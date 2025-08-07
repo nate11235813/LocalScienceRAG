@@ -1,5 +1,5 @@
 model:
-  id: microsoft/phi-2
+  id: unsloth/gpt-oss-20b-BF16
   dtype: float32
   device: cpu
   max_new_tokens: 200
