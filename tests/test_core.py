@@ -3,8 +3,45 @@
 import unittest
 from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
-import yaml
-from core import ModelManager, EmbeddingsManager, VectorStoreManager, DocumentRetriever
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+sys.modules.setdefault("torch", MagicMock())
+import types
+
+
+class _Mapping(dict):
+    def register(self, key, value):  # pragma: no cover - trivial
+        self[key] = value
+
+
+transformers_stub = types.ModuleType("transformers")
+transformers_stub.AutoTokenizer = MagicMock()
+transformers_stub.AutoModelForCausalLM = MagicMock()
+transformers_stub.AutoConfig = MagicMock()
+transformers_stub.CONFIG_MAPPING = _Mapping()
+transformers_stub.MODEL_FOR_CAUSAL_LM_MAPPING = _Mapping()
+transformers_stub.pipeline = MagicMock()
+transformers_stub.Pipeline = MagicMock()
+
+llama_module = types.ModuleType("transformers.models.llama")
+llama_module.LlamaConfig = MagicMock()
+llama_module.LlamaForCausalLM = MagicMock()
+
+transformers_stub.models = types.SimpleNamespace(llama=llama_module)
+
+sys.modules.setdefault("transformers", transformers_stub)
+sys.modules.setdefault("transformers.models", transformers_stub.models)
+sys.modules.setdefault("transformers.models.llama", llama_module)
+sys.modules.setdefault("langchain_huggingface", MagicMock())
+sys.modules.setdefault("langchain_community.vectorstores", MagicMock())
+sys.modules.setdefault("langchain_core.documents", MagicMock())
+
+from core.embeddings import EmbeddingsManager
+from core.model_manager import ModelManager
+from core.retriever import DocumentRetriever
+from core.vector_store import VectorStoreManager
 
 
 class TestModelManager(unittest.TestCase):
@@ -31,19 +68,22 @@ class TestModelManager(unittest.TestCase):
         self.assertIsNone(self.model_manager.model)
         self.assertIsNone(self.model_manager.tokenizer)
     
-    @patch('core.model_manager.AutoTokenizer')
-    @patch('core.model_manager.AutoModelForCausalLM')
-    def test_load_model(self, mock_model_class, mock_tokenizer_class):
+    @patch("core.model_manager.pipeline")
+    @patch("core.model_manager.AutoTokenizer")
+    @patch("core.model_manager.AutoModelForCausalLM")
+    def test_load_model(self, mock_model_class, mock_tokenizer_class, mock_pipeline):
         """Test model loading."""
         mock_tokenizer = Mock()
         mock_model = Mock()
         mock_tokenizer_class.from_pretrained.return_value = mock_tokenizer
         mock_model_class.from_pretrained.return_value = mock_model
-        
+        mock_pipeline.return_value = Mock()
+
         self.model_manager.load_model()
-        
+
         mock_tokenizer_class.from_pretrained.assert_called_once()
         mock_model_class.from_pretrained.assert_called_once()
+        mock_pipeline.assert_called_once()
         self.assertIsNotNone(self.model_manager.tokenizer)
         self.assertIsNotNone(self.model_manager.model)
     
@@ -179,3 +219,4 @@ class TestDocumentRetriever(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

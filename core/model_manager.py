@@ -1,15 +1,18 @@
-"""Model management for GPT-OSS-20B."""
+"""Model management for causal language models."""
 
 import os
 import torch
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
+import logging
 from transformers import (
-    AutoTokenizer,
     AutoModelForCausalLM,
+    AutoTokenizer,
     Pipeline,
     pipeline,
 )
-import logging
+
+from .gpt_oss_loader import GPTOSSLoader
 
 logger = logging.getLogger(__name__)
 
@@ -47,26 +50,34 @@ class ModelManager:
     def load_model(self) -> None:
         """Load the model and tokenizer."""
         try:
-            logger.info(f"Loading tokenizer from {self.model_id}")
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                self.model_id, 
-                trust_remote_code=True
-            )
-            
-            logger.info(f"Loading model from {self.model_id}")
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_id,
-                torch_dtype=self.dtype,
-                device_map=self.device,
-                trust_remote_code=True,
-            )
-            
-            # Free CPU weight copy to reclaim memory
+            is_gpt_oss = "gpt-oss" in self.model_id.lower()
+
+            if is_gpt_oss:
+                logger.info("Detected GPT-OSS model; using custom loader")
+                self.model, self.tokenizer = GPTOSSLoader.load_model_and_tokenizer(
+                    model_id=self.model_id,
+                    device=self.device,
+                    dtype=self.dtype,
+                )
+            else:
+                logger.info(f"Loading tokenizer from {self.model_id}")
+                self.tokenizer = AutoTokenizer.from_pretrained(
+                    self.model_id,
+                    trust_remote_code=True,
+                )
+
+                logger.info(f"Loading model from {self.model_id}")
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.model_id,
+                    torch_dtype=self.dtype,
+                    device_map=self.device,
+                    trust_remote_code=True,
+                )
+
             if hasattr(self.model, "_cpu_state_dict"):
                 delattr(self.model, "_cpu_state_dict")
                 logger.debug("Freed CPU state dict to save memory")
-            
-            # Create pipeline
+
             self.pipeline = pipeline(
                 "text-generation",
                 model=self.model,
@@ -74,9 +85,9 @@ class ModelManager:
                 device_map=self.device,
                 torch_dtype=self.dtype,
             )
-            
+
             logger.info("Model loaded successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
             raise
